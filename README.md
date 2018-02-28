@@ -8,8 +8,8 @@ Shows how Ports, Port Drivers and NIFs work in Elixir.
 
 Prerequisites for compiling the C code: 
 
-GNU Scientific Library libgsl : http:gnu.org/software/gsl 
-Postgresql C library libpq : http:postgresql.org/docs/10/static/libpq.html
+* GNU Scientific Library libgsl : http:gnu.org/software/gsl 
+* Postgresql C library libpq : http:postgresql.org/docs/10/static/libpq.html
 
 ## Running the Examples
 
