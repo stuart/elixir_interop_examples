@@ -1,24 +1,16 @@
-# InteropExamples
+# Elixir Interop Examples
 
-**TODO: Add description**
+Some simple examples of interoperation with C code from Elixir. 
+
+Shows how Ports, Port Drivers and NIFs work in Elixir.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+Prerequisites for compiling the C code: 
 
-  1. Add `interop_examples` to your list of dependencies in `mix.exs`:
+GNU Scientific Library libgsl : http:gnu.org/software/gsl 
+Postgresql C library libpq : http:postgresql.org/docs/10/static/libpq.html
 
-    ```elixir
-    def deps do
-      [{:interop_examples, "~> 0.1.0"}]
-    end
-    ```
+## Running the Examples
 
-  2. Ensure `interop_examples` is started before your application:
-
-    ```elixir
-    def application do
-      [applications: [:interop_examples]]
-    end
-    ```
-
+TODO
