@@ -1,5 +1,4 @@
 defmodule PortDriverExample do
-	@doc "Called to start the port driver"
 	def start() do
 		case :erl_ddll.load_driver('./priv/bin', 'example_drv') do
 			:ok -> :ok
@@ -7,13 +6,22 @@ defmodule PortDriverExample do
 			msg -> exit({:error, msg})
 		end
 		spawn(__MODULE__, :init, ["example_drv"])
+		:ok
 	end
 
 	def stop do
 		send(__MODULE__, :stop)
 	end
 
-	@doc "Get the hello world response"
+	@doc """
+		Returns "hello world"
+
+		#Example
+
+		iex> PortDriverExample.hello()
+		"hello world"
+
+	"""
 	def hello() do
 		send(__MODULE__,{:call, self()})
 		receive do

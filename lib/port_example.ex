@@ -4,8 +4,20 @@ defmodule PortExample do
 		GenServer.start_link(__MODULE__, [], name: __MODULE__)
 	end
 
+
+	@doc """
+	  Evaluates the n th Bessel function at point x.
+
+		iex> PortExample.bessel(1, 2.0)
+		0.5767248077568734
+
+	"""
 	def bessel(n, x) do
 		GenServer.call(__MODULE__, {:bessel, n, x})
+		receive do
+			{:bessel, res} -> res
+			msg -> {:error, msg}
+		end
 	end
 
 	def init([]) do

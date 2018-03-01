@@ -3,11 +3,12 @@ defmodule InteropExamples do
 
 	def start(_type, _args) do
 		children = [
-			%{
-		 			id: PortExample,
-		 			start: {PortExample, :start_link, []}
-	 			}
+			%{ id: PortExample,
+		 		 start: {PortExample, :start_link, []}},
 		]
+
+		PortDriverExample.start()
+		EiPortExample.start()
 
 		{:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
 	end

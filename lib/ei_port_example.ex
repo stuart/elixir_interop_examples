@@ -1,4 +1,5 @@
 defmodule EiPortExample do
+
 def start() do
 	Process.spawn(__MODULE__, :init, ["./priv/bin/polynomial"], [])
 end
@@ -7,6 +8,17 @@ def stop do
 	send(__MODULE__, :stop)
 end
 
+@doc """
+	Evaluates the polynomial described by the coeffs argument with the value x.
+	Coeffs is a list of coefficients of powers of x starting from x^0.
+	For example: x^2 + 3x + 2 would have coefficients [2.0, 3.0, 1.0]
+
+	##Example
+
+		iex> EiPortExample.polynomial([2.0, 3.0, 1.0], 1.5)
+		8.75
+
+"""
 def polynomial(coeffs, x) do
 	send(__MODULE__,{:call, self(), {coeffs, x}})
 	receive do
