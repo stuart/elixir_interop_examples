@@ -6,7 +6,7 @@ defmodule Complex do
 	@on_load :init
 
 	def init do
-		:ok = :erlang.load_nif("./priv/bin/complex_nif", 0)
+		:erlang.load_nif("./priv/bin/complex_nif", 0)
 	end
 
 	@doc """
@@ -31,6 +31,9 @@ defmodule Complex do
 		iex> is_reference(ref)
 		true
 
+		iex> ref = Complex.new(1.0, 4)
+		** (ArgumentError) argument error
+
 	"""
 	def new(_a,_b) do
 		exit(:nif_library_not_loaded)
@@ -54,9 +57,12 @@ defmodule Complex do
 
 		## Example
 
-		iex> ref = Complex.new(1.0, 1.0)
-		iex> Complex.abs(ref)
-		1.4142135623730951
+			iex> ref = Complex.new(1.0, 1.0)
+			iex> Complex.abs(ref)
+			1.4142135623730951
+
+      iex> Complex.abs("a")
+      ** (ArgumentError) argument error
 
 	"""
 	def abs(_complex) do
@@ -72,6 +78,8 @@ defmodule Complex do
 		iex> Complex.arg(ref)
 		0.7853981633974483
 
+		iex> Complex.arg(1.23)
+		** (ArgumentError) argument error
 	"""
 	def arg(_complex) do
 		exit(:nif_library_not_loaded)
