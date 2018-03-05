@@ -2,76 +2,74 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "erl_interface.h"
 #include "ei.h"
 
 #define BUFSIZE 1000
+int my_listen(int port);
 
 int main(int argc, char **argv) {
         int port;                          /* Listen port number */
         int listen;                        /* Listen socket */
         int fd;                            /* fd to Erlang node */
         ErlConnect conn;                   /* Connection data */
+        ei_cnode ec;
 
         int loop = 1;                      /* Loop flag */
-        int got;                           /* Result of receive */
-        unsigned char buf[BUFSIZE];        /* Buffer for incoming message */
-        ErlMessage emsg;                   /* Incoming message */
+        int got;
 
-        ETERM *fromp, *tuplep, *fnp, *argp, *resp;
-        int res;
+        erlang_msg emsg;                   /* Incoming message */
+        ei_x_buff msg;                     /* Incoming message buffer */
 
+        ei_set_tracelevel(5);
+
+        if(argc < 2){
+          printf("Usage: cnode <port>\n");
+          return(-1);
+        }
         port = atoi(argv[1]);
 
+        printf("Init\n");
         erl_init(NULL, 0);
 
-        if (erl_connect_init(1, "secretcookie", 0) == -1)
-                erl_err_quit("erl_connect_init");
+        printf("Connecting\n");
+        if (ei_connect_init(&ec, "cnode", "chocolatecookie", 1) < 0)
+                erl_err_quit("Error on connect_init.");
 
         /* Make a listen socket */
+        printf("Listening\n");
         if ((listen = my_listen(port)) <= 0)
-                erl_err_quit("my_listen");
+                erl_err_quit("Error on listen.");
 
-        if (erl_publish(port) == -1)
-                erl_err_quit("erl_publish");
+        printf("Publishing\n");
+        if (ei_publish(&ec, port) == -1)
+                erl_err_quit("Error on erl_publish.");
 
-        if ((fd = erl_accept(listen, &conn)) == ERL_ERROR)
-                erl_err_quit("erl_accept");
+        printf("Accepting\n");
+        if ((fd = ei_accept(&ec, listen, &conn)) == ERL_ERROR)
+                erl_err_quit("Error on erl_accept");
+
         fprintf(stderr, "Connected to %s\n\r", conn.nodename);
-
+        ei_x_new(&msg);
         while (loop) {
-                got = erl_receive_msg(fd, buf, BUFSIZE, &emsg);
+                got = ei_receive_msg(fd, &emsg, &msg);
+                printf("Got Message: ");
                 if (got == ERL_TICK) {
                         /* ignore */
                 } else if (got == ERL_ERROR) {
                         loop = 0;
                 } else {
-                        if (emsg.type == ERL_REG_SEND) {
-                                fromp = erl_element(2, emsg.msg);
-                                tuplep = erl_element(3, emsg.msg);
-                                fnp = erl_element(1, tuplep);
-                                argp = erl_element(2, tuplep);
-
-                                if (strncmp(ERL_ATOM_PTR(fnp), "foo", 3) == 0) {
-                                        res = foo(ERL_INT_VALUE(argp));
-                                } else if (strncmp(ERL_ATOM_PTR(fnp), "bar", 3) == 0) {
-                                        res = bar(ERL_INT_VALUE(argp));
-                                }
-
-                                resp = erl_format("{cnode, ~i}", res);
-                                erl_send(fd, fromp, resp);
-
-                                erl_free_term(emsg.from);
-                                erl_free_term(emsg.msg);
-                                erl_free_term(fromp);
-                                erl_free_term(tuplep);
-                                erl_free_term(fnp);
-                                erl_free_term(argp);
-                                erl_free_term(resp);
+                        if (emsg.msgtype == ERL_REG_SEND) {
+                                ETERM *e = erl_mk_int(5);
+                                ei_send(fd, &emsg.from, e, erl_size(e));
+                                erl_free_term(e);
                         }
                 }
         } /* while */
+        ei_x_free(&msg);
 }
 
 

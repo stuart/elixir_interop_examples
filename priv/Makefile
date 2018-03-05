@@ -12,7 +12,7 @@ CPPFLAGS=-I./include -I$(EIDIR)/include -I$(ERTSDIR)/include -Wall -Wmissing-pro
 LFLAGS=-L$(EIDIR)/lib -L$(ERTSDIR)/lib -L$(EIDIR)/lib
 SOFLAGS=-fPIC -shared -flat_namespace -undefined suppress
 
-_OBJECTS=bessel polynomial example_drv.so complex_nif.so pg_async.so
+_OBJECTS=bessel polynomial example_drv.so complex_nif.so pg_async.so cnode
 OBJECTS = $(patsubst %,$(BINDIR)/%,$(_OBJECTS))
 
 all: $(OBJECTS)
@@ -31,6 +31,9 @@ bin/complex_nif.so: $(SRCDIR)/nif.c
 
 bin/pg_async.so: $(SRCDIR)/pg_async.c $(SRCDIR)/pg_encode.c
 	$(CC) -o $(BINDIR)/pg_async.so $(SRCDIR)/pg_async.c $(SRCDIR)/pg_encode.c $(CPPFLAGS) $(PGINC) $(LFLAGS) $(PGLIBS) $(LIBS) -lpq $(SOFLAGS)
+
+bin/cnode: $(SRCDIR)/node.c
+	$(CC) -o $(BINDIR)/cnode $(SRCDIR)/node.c $(CPPFLAGS) $(LFLAGS) $(LIBS)
 
 clean:
 	rm $(OBJECTS)
