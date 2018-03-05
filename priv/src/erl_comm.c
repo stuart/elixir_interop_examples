@@ -1,8 +1,11 @@
 /* erl_comm.c */
 #include <unistd.h>
 #include <stdio.h>
+#include "erl_comm.h"
 
 typedef unsigned char byte;
+int read_exact(byte *buf, int len);
+int write_exact(byte *buf, int len);
 
 int read_exact(byte *buf, int len)
 {

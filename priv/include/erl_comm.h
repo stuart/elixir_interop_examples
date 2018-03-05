@@ -5,5 +5,4 @@
 	int read_cmd(byte *buf);
 
 	int write_cmd(byte *buf, int len);
-
 #endif

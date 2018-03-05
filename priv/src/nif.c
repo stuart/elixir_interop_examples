@@ -3,6 +3,7 @@
 #include <gsl/gsl_complex_math.h>
 
 ErlNifResourceType *complex_type;
+int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info);
 
 int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
 {

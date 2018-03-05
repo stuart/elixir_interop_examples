@@ -8,7 +8,7 @@ CC=gcc
 SRCDIR=./src
 BINDIR=./bin
 LIBS=-lgsl -lerl_interface -lei -lerts
-CPPFLAGS=-I./include -I$(EIDIR)/include -I$(ERTSDIR)/include -Wall
+CPPFLAGS=-I./include -I$(EIDIR)/include -I$(ERTSDIR)/include -Wall -Wmissing-prototypes -Wstrict-prototypes
 LFLAGS=-L$(EIDIR)/lib -L$(ERTSDIR)/lib -L$(EIDIR)/lib
 SOFLAGS=-fPIC -shared -flat_namespace -undefined suppress
 

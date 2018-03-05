@@ -23,15 +23,13 @@
  */
 
 #include <erl_driver.h>
-
 #include <libpq-fe.h>
-
 #include <ei.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <stdint.h>
 #include "pg_encode.h"
 
 /* Driver interface declarations */
@@ -155,8 +153,8 @@ static int do_connect(const char *s, our_data_t* data)
 								PQconnectPoll(conn);
 								int socket = PQsocket(conn);
 								data->socket = socket;
-								driver_select(data->port, (ErlDrvEvent)socket, DO_READ, 1);
-								driver_select(data->port, (ErlDrvEvent)socket, DO_WRITE, 1);
+								driver_select(data->port, (ErlDrvEvent)(uintptr_t)socket, DO_READ, 1);
+								driver_select(data->port, (ErlDrvEvent)(uintptr_t)socket, DO_WRITE, 1);
 								data->conn = conn;
 								data->connecting = 1;
 								return 0;
@@ -165,8 +163,8 @@ static int do_connect(const char *s, our_data_t* data)
 static int do_disconnect(our_data_t* data)
 {
 								ei_x_buff x;
-								driver_select(data->port, (ErlDrvEvent)data->socket, DO_READ, 0);
-								driver_select(data->port, (ErlDrvEvent)data->socket, DO_WRITE, 0);
+								driver_select(data->port, (ErlDrvEvent)(uintptr_t)data->socket, DO_READ, 0);
+								driver_select(data->port, (ErlDrvEvent)(uintptr_t)data->socket, DO_WRITE, 0);
 								PQfinish(data->conn);
 								data->conn = NULL;
 								ei_x_new_with_version(&x);
@@ -224,7 +222,7 @@ static void ready_io(ErlDrvData drv_data, ErlDrvEvent event)
 								if (x.index > 1) {
 																driver_output(data->port, x.buff, x.index);
 																if (data->connecting)
-																								driver_select(data->port, (ErlDrvEvent)data->socket, DO_WRITE, 0);
+																								driver_select(data->port, (ErlDrvEvent)(uintptr_t)data->socket, DO_WRITE, 0);
 								}
 								ei_x_free(&x);
 }
