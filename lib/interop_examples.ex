@@ -10,6 +10,6 @@ defmodule InteropExamples do
 		PortDriverExample.start()
 		EiPortExample.start()
 
-		{:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+		{:ok, _pid} = Supervisor.start_link(children, strategy: :one_for_one)
 	end
 end

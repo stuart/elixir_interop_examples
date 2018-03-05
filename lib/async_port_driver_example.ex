@@ -53,9 +53,9 @@ defmodule AsyncPortDriverExample do
 		return_port_data(port)
 	end
 
-	defp return_port_data(port) do
+	defp return_port_data(_port) do
 		receive do
-			{port, {:data, data}} ->
+			{_port, {:data, data}} ->
 				:erlang.binary_to_term(data)
 		end
 	end

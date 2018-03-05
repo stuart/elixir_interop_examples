@@ -31,7 +31,7 @@ defmodule Complex do
 		iex> is_reference(ref)
 		true
 
-		iex> ref = Complex.new(1.0, 4)
+		iex> _ref = Complex.new(1.0, 4)
 		** (ArgumentError) argument error
 
 	"""
