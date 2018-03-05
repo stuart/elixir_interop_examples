@@ -1,8 +1,5 @@
-OTPROOT=/usr/local/Cellar/erlang/20.2.4/lib/erlang
-EIVSN=3.10.1
-ERTSVSN=9.2.1
-EIDIR=$(OTPROOT)/lib/erl_interface-$(EIVSN)
-ERTSDIR=$(OTPROOT)/erts-$(ERTSVSN)
+EIDIR=`elixir script/erlang_config.exs ei`
+ERTSDIR=`elixir script/erlang_config.exs erts`
 
 PGLIBS=-L$(shell pg_config --libdir)
 PGINC=-I$(shell pg_config --includedir)
