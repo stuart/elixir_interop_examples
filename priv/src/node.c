@@ -21,10 +21,11 @@ int main(int argc, char **argv) {
         int loop = 1;                      /* Loop flag */
         int got;
 
-        erlang_msg emsg;                   /* Incoming message */
-        ei_x_buff msg;                     /* Incoming message buffer */
+        ErlMessage emsg;
+        unsigned char message[BUFSIZE];     /* Incoming message buffer */
 
-        ei_set_tracelevel(5);
+        ETERM *fromp, *tuplep, *fnp, *argp, *resp;
+        int res;
 
         if(argc < 2){
           printf("Usage: cnode <port>\n");
@@ -33,6 +34,8 @@ int main(int argc, char **argv) {
         port = atoi(argv[1]);
 
         printf("Init\n");
+
+        ei_set_tracelevel(5);
         erl_init(NULL, 0);
 
         printf("Connecting\n");
@@ -53,25 +56,41 @@ int main(int argc, char **argv) {
                 erl_err_quit("Error on erl_accept");
 
         fprintf(stderr, "Connected to %s\n\r", conn.nodename);
-        ei_x_new(&msg);
         while (loop) {
-                got = ei_receive_msg(fd, &emsg, &msg);
-                printf("Got Message: ");
+                got = erl_receive_msg(fd, message, BUFSIZE, &emsg);
                 if (got == ERL_TICK) {
                         /* ignore */
                 } else if (got == ERL_ERROR) {
                         loop = 0;
                 } else {
-                        if (emsg.msgtype == ERL_REG_SEND) {
-                                ETERM *e = erl_mk_int(5);
-                                ei_send(fd, &emsg.from, e, erl_size(e));
-                                erl_free_term(e);
-                        }
-                }
-        } /* while */
-        ei_x_free(&msg);
-}
+                        if (emsg.type == ERL_REG_SEND) {
+                            fromp = erl_element(2, emsg.msg);
+                            tuplep = erl_element(3, emsg.msg);
+                            fnp = erl_element(1, tuplep);
+                            argp = erl_element(2, tuplep);
+                            if(strncmp(ERL_ATOM_PTR(fnp), "cube", 4) == 0){
+                              res = ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp);
+                            }
+                            if(strncmp(ERL_ATOM_PTR(fnp), "square", 6) == 0){
+                              res = ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp);
+                            }
 
+                            resp = erl_format("{cnode, ~i}", res);
+                            erl_send(fd, fromp, resp);
+
+                        }
+
+                        erl_free_term(fromp);
+                        erl_free_term(fnp);
+                        erl_free_term(argp);
+                        erl_free_term(tuplep);
+                        erl_free_term(resp);
+                        erl_free_term(emsg.from);
+                        erl_free_term(emsg.msg);
+                }
+
+        } /* while */
+}
 
 int my_listen(int port) {
         int listen_fd;
