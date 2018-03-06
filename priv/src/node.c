@@ -17,28 +17,28 @@ int my_listen(int port);
 int run_cnode(int port);
 
 int main(int argc, char **argv) {
-  int port;
-  int pid;
-  int fd;
+        int port;
+        int pid;
+        int fd;
 
-  if(argc < 2){
-    printf("Usage: cnode <port>\n");
-    return(-1);
-  }
-  port = atoi(argv[1]);
+        if(argc < 2) {
+                printf("Usage: cnode <port>\n");
+                return(-1);
+        }
+        port = atoi(argv[1]);
 
-  if((pid = fork()) != 0)
-    exit(0);
+        if((pid = fork()) != 0)
+                exit(0);
 
-  setsid();
-  chdir("/");
-  umask(0);
-  if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
-    ioctl(fd, TIOCNOTTY, 0);
-    close(fd);
-  }
+        setsid();
+        chdir("/");
+        umask(0);
+        if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+                ioctl(fd, TIOCNOTTY, 0);
+                close(fd);
+        }
 
-  return run_cnode(port);
+        return run_cnode(port);
 }
 
 int run_cnode(int port){
@@ -87,19 +87,19 @@ int run_cnode(int port){
                         loop = 0;
                 } else {
                         if (emsg.type == ERL_REG_SEND) {
-                            fromp = erl_element(2, emsg.msg);
-                            tuplep = erl_element(3, emsg.msg);
-                            fnp = erl_element(1, tuplep);
-                            argp = erl_element(2, tuplep);
-                            if(strncmp(ERL_ATOM_PTR(fnp), "cube", 4) == 0){
-                              res = ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp);
-                            }
-                            if(strncmp(ERL_ATOM_PTR(fnp), "square", 6) == 0){
-                              res = ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp);
-                            }
+                                fromp = erl_element(2, emsg.msg);
+                                tuplep = erl_element(3, emsg.msg);
+                                fnp = erl_element(1, tuplep);
+                                argp = erl_element(2, tuplep);
+                                if(strncmp(ERL_ATOM_PTR(fnp), "cube", 4) == 0) {
+                                        res = ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp);
+                                }
+                                if(strncmp(ERL_ATOM_PTR(fnp), "square", 6) == 0) {
+                                        res = ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp);
+                                }
 
-                            resp = erl_format("{cnode, ~i}", res);
-                            erl_send(fd, fromp, resp);
+                                resp = erl_format("{cnode, ~i}", res);
+                                erl_send(fd, fromp, resp);
 
                         }
 
@@ -113,7 +113,7 @@ int run_cnode(int port){
                 }
 
         } /* while */
-    return 0;
+        return 0;
 }
 
 int my_listen(int port) {
