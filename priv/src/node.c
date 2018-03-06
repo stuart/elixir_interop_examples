@@ -1,18 +1,47 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include <fcntl.h>
 #include <netinet/in.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "erl_interface.h"
 #include "ei.h"
 
 #define BUFSIZE 1000
 int my_listen(int port);
+int run_cnode(int port);
 
 int main(int argc, char **argv) {
-        int port;                          /* Listen port number */
+  int port;
+  int pid;
+  int fd;
+
+  if(argc < 2){
+    printf("Usage: cnode <port>\n");
+    return(-1);
+  }
+  port = atoi(argv[1]);
+
+  if((pid = fork()) != 0)
+    exit(0);
+
+  setsid();
+  chdir("/");
+  umask(0);
+  if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+    ioctl(fd, TIOCNOTTY, 0);
+    close(fd);
+  }
+
+  return run_cnode(port);
+}
+
+int run_cnode(int port){
         int listen;                        /* Listen socket */
         int fd;                            /* fd to Erlang node */
         ErlConnect conn;                   /* Connection data */
@@ -26,12 +55,6 @@ int main(int argc, char **argv) {
 
         ETERM *fromp, *tuplep, *fnp, *argp, *resp;
         int res;
-
-        if(argc < 2){
-          printf("Usage: cnode <port>\n");
-          return(-1);
-        }
-        port = atoi(argv[1]);
 
         printf("Init\n");
 
@@ -90,6 +113,7 @@ int main(int argc, char **argv) {
                 }
 
         } /* while */
+    return 0;
 }
 
 int my_listen(int port) {
