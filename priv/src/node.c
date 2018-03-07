@@ -8,8 +8,38 @@
 
 #define BUFSIZE 1000
 
-int main(int argc, char **argv) {
-        int port;                          /* Listen port number */
+int cube(int x){
+  return x * x * x;
+}
+
+int square(int x){
+  return x * x;
+}
+
+int my_listen(int port) {
+        int listen_fd;
+        struct sockaddr_in addr;
+        int on = 1;
+
+        if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+                return (-1);
+
+        setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+
+        memset((void*) &addr, 0, (size_t) sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+        if (bind(listen_fd, (struct sockaddr*) &addr, sizeof(addr)) < 0)
+                return (-1);
+
+        listen(listen_fd, 5);
+        return listen_fd;
+}
+
+
+int run_cnode(int port){
         int listen;                        /* Listen socket */
         int fd;                            /* fd to Erlang node */
         ErlConnect conn;                   /* Connection data */
@@ -53,10 +83,11 @@ int main(int argc, char **argv) {
                                 fnp = erl_element(1, tuplep);
                                 argp = erl_element(2, tuplep);
 
-                                if (strncmp(ERL_ATOM_PTR(fnp), "foo", 3) == 0) {
-                                        res = foo(ERL_INT_VALUE(argp));
-                                } else if (strncmp(ERL_ATOM_PTR(fnp), "bar", 3) == 0) {
-                                        res = bar(ERL_INT_VALUE(argp));
+                                if(strncmp(ERL_ATOM_PTR(fnp), "cube", 4) == 0) {
+                                  res = cube(ERL_INT_VALUE(argp));
+                                }
+                                if(strncmp(ERL_ATOM_PTR(fnp), "square", 6) == 0) {
+                                  res = square(ERL_INT_VALUE(argp));
                                 }
 
                                 resp = erl_format("{cnode, ~i}", res);
@@ -75,24 +106,27 @@ int main(int argc, char **argv) {
 }
 
 
-int my_listen(int port) {
-        int listen_fd;
-        struct sockaddr_in addr;
-        int on = 1;
+int main(int argc, char **argv) {
+        int port;
+        int pid;
+        int fd;
 
-        if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-                return (-1);
+        if(argc < 2) {
+                printf("Usage: cnode <port>\n");
+                return(-1);
+        }
+        port = atoi(argv[1]);
 
-        setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+        if((pid = fork()) != 0)
+                exit(0);
 
-        memset((void*) &addr, 0, (size_t) sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(port);
-        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        setsid();
+        chdir("/");
+        umask(0);
+        if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+                ioctl(fd, TIOCNOTTY, 0);
+                close(fd);
+        }
 
-        if (bind(listen_fd, (struct sockaddr*) &addr, sizeof(addr)) < 0)
-                return (-1);
-
-        listen(listen_fd, 5);
-        return listen_fd;
+        return run_cnode(port);
 }
