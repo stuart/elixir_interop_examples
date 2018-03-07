@@ -1,47 +1,85 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include <fcntl.h>
 #include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "erl_interface.h"
 #include "ei.h"
 
 #define BUFSIZE 1000
+int my_listen(int port);
+int run_cnode(int port);
 
 int main(int argc, char **argv) {
-        int port;                          /* Listen port number */
+        int port;
+        int pid;
+        int fd;
+
+        if(argc < 2) {
+                printf("Usage: cnode <port>\n");
+                return(-1);
+        }
+        port = atoi(argv[1]);
+
+        if((pid = fork()) != 0)
+                exit(0);
+
+        setsid();
+        chdir("/");
+        umask(0);
+        if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+                ioctl(fd, TIOCNOTTY, 0);
+                close(fd);
+        }
+
+        return run_cnode(port);
+}
+
+int run_cnode(int port){
         int listen;                        /* Listen socket */
         int fd;                            /* fd to Erlang node */
         ErlConnect conn;                   /* Connection data */
 
         int loop = 1;                      /* Loop flag */
-        int got;                           /* Result of receive */
-        unsigned char buf[BUFSIZE];        /* Buffer for incoming message */
-        ErlMessage emsg;                   /* Incoming message */
+        int got;
+
+        ErlMessage emsg;
+        unsigned char message[BUFSIZE];     /* Incoming message buffer */
 
         ETERM *fromp, *tuplep, *fnp, *argp, *resp;
         int res;
 
-        port = atoi(argv[1]);
+        printf("Init\n");
 
+        ei_set_tracelevel(5);
         erl_init(NULL, 0);
 
-        if (erl_connect_init(1, "secretcookie", 0) == -1)
-                erl_err_quit("erl_connect_init");
+        printf("Connecting\n");
+        if (erl_connect_init(1, "chocolatecookie", 1) < 0)
+                erl_err_quit("Error on connect_init.");
 
         /* Make a listen socket */
+        printf("Listening\n");
         if ((listen = my_listen(port)) <= 0)
-                erl_err_quit("my_listen");
+                erl_err_quit("Error on listen.");
 
+        printf("Publishing\n");
         if (erl_publish(port) == -1)
-                erl_err_quit("erl_publish");
+                erl_err_quit("Error on erl_publish.");
 
+        printf("Accepting\n");
         if ((fd = erl_accept(listen, &conn)) == ERL_ERROR)
-                erl_err_quit("erl_accept");
-        fprintf(stderr, "Connected to %s\n\r", conn.nodename);
+                erl_err_quit("Error on erl_accept");
 
+        fprintf(stderr, "Connected to %s\n\r", conn.nodename);
         while (loop) {
-                got = erl_receive_msg(fd, buf, BUFSIZE, &emsg);
+                got = erl_receive_msg(fd, message, BUFSIZE, &emsg);
                 if (got == ERL_TICK) {
                         /* ignore */
                 } else if (got == ERL_ERROR) {
@@ -52,28 +90,30 @@ int main(int argc, char **argv) {
                                 tuplep = erl_element(3, emsg.msg);
                                 fnp = erl_element(1, tuplep);
                                 argp = erl_element(2, tuplep);
-
-                                if (strncmp(ERL_ATOM_PTR(fnp), "foo", 3) == 0) {
-                                        res = foo(ERL_INT_VALUE(argp));
-                                } else if (strncmp(ERL_ATOM_PTR(fnp), "bar", 3) == 0) {
-                                        res = bar(ERL_INT_VALUE(argp));
+                                if(strncmp(ERL_ATOM_PTR(fnp), "cube", 4) == 0) {
+                                        res = ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp);
+                                }
+                                if(strncmp(ERL_ATOM_PTR(fnp), "square", 6) == 0) {
+                                        res = ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp);
                                 }
 
                                 resp = erl_format("{cnode, ~i}", res);
                                 erl_send(fd, fromp, resp);
 
-                                erl_free_term(emsg.from);
-                                erl_free_term(emsg.msg);
-                                erl_free_term(fromp);
-                                erl_free_term(tuplep);
-                                erl_free_term(fnp);
-                                erl_free_term(argp);
-                                erl_free_term(resp);
                         }
-                }
-        } /* while */
-}
 
+                        erl_free_term(fromp);
+                        erl_free_term(fnp);
+                        erl_free_term(argp);
+                        erl_free_term(tuplep);
+                        erl_free_term(resp);
+                        erl_free_term(emsg.from);
+                        erl_free_term(emsg.msg);
+                }
+
+        } /* while */
+        return 0;
+}
 
 int my_listen(int port) {
         int listen_fd;
