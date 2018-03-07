@@ -13,32 +13,27 @@
 #include "ei.h"
 
 #define BUFSIZE 1000
-int my_listen(int port);
-int run_cnode(int port);
 
-int main(int argc, char **argv) {
-        int port;
-        int pid;
-        int fd;
+int my_listen(int port) {
+        int listen_fd;
+        struct sockaddr_in addr;
+        int on = 1;
 
-        if(argc < 2) {
-                printf("Usage: cnode <port>\n");
-                return(-1);
-        }
-        port = atoi(argv[1]);
+        if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+                return (-1);
 
-        if((pid = fork()) != 0)
-                exit(0);
+        setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 
-        setsid();
-        chdir("/");
-        umask(0);
-        if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
-                ioctl(fd, TIOCNOTTY, 0);
-                close(fd);
-        }
+        memset((void*) &addr, 0, (size_t) sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-        return run_cnode(port);
+        if (bind(listen_fd, (struct sockaddr*) &addr, sizeof(addr)) < 0)
+                return (-1);
+
+        listen(listen_fd, 5);
+        return listen_fd;
 }
 
 int run_cnode(int port){
@@ -49,7 +44,7 @@ int run_cnode(int port){
         int loop = 1;                      /* Loop flag */
         int got;
 
-        ErlMessage emsg;
+        ErlMessage emsg;                    /* Incoming message */
         unsigned char message[BUFSIZE];     /* Incoming message buffer */
 
         ETERM *fromp, *tuplep, *fnp, *argp, *resp;
@@ -61,7 +56,7 @@ int run_cnode(int port){
         erl_init(NULL, 0);
 
         printf("Connecting\n");
-        if (erl_connect_init(1, "chocolatecookie", 1) < 0)
+        if (erl_connect_init(1, "chocolatecookie", 0) < 0)
                 erl_err_quit("Error on connect_init.");
 
         /* Make a listen socket */
@@ -90,6 +85,7 @@ int run_cnode(int port){
                                 tuplep = erl_element(3, emsg.msg);
                                 fnp = erl_element(1, tuplep);
                                 argp = erl_element(2, tuplep);
+
                                 if(strncmp(ERL_ATOM_PTR(fnp), "cube", 4) == 0) {
                                         res = ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp) * ERL_INT_VALUE(argp);
                                 }
@@ -99,7 +95,6 @@ int run_cnode(int port){
 
                                 resp = erl_format("{cnode, ~i}", res);
                                 erl_send(fd, fromp, resp);
-
                         }
 
                         erl_free_term(fromp);
@@ -115,24 +110,27 @@ int run_cnode(int port){
         return 0;
 }
 
-int my_listen(int port) {
-        int listen_fd;
-        struct sockaddr_in addr;
-        int on = 1;
+int main(int argc, char **argv) {
+        int port;
+        int pid;
+        int fd;
 
-        if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-                return (-1);
+        if(argc < 2) {
+                printf("Usage: cnode <port>\n");
+                return(-1);
+        }
+        port = atoi(argv[1]);
 
-        setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+        if((pid = fork()) != 0)
+                exit(0);
 
-        memset((void*) &addr, 0, (size_t) sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(port);
-        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        setsid();
+        chdir("/");
+        umask(0);
+        if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+                ioctl(fd, TIOCNOTTY, 0);
+                close(fd);
+        }
 
-        if (bind(listen_fd, (struct sockaddr*) &addr, sizeof(addr)) < 0)
-                return (-1);
-
-        listen(listen_fd, 5);
-        return listen_fd;
+        return run_cnode(port);
 }
