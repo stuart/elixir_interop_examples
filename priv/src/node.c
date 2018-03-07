@@ -45,7 +45,6 @@ int run_cnode(int port){
         int listen;                        /* Listen socket */
         int fd;                            /* fd to Erlang node */
         ErlConnect conn;                   /* Connection data */
-        ei_cnode ec;
 
         int loop = 1;                      /* Loop flag */
         int got;
@@ -62,7 +61,7 @@ int run_cnode(int port){
         erl_init(NULL, 0);
 
         printf("Connecting\n");
-        if (ei_connect_init(&ec, "cnode", "chocolatecookie", 1) < 0)
+        if (erl_connect_init(1, "chocolatecookie", 1) < 0)
                 erl_err_quit("Error on connect_init.");
 
         /* Make a listen socket */
@@ -71,11 +70,11 @@ int run_cnode(int port){
                 erl_err_quit("Error on listen.");
 
         printf("Publishing\n");
-        if (ei_publish(&ec, port) == -1)
+        if (erl_publish(port) == -1)
                 erl_err_quit("Error on erl_publish.");
 
         printf("Accepting\n");
-        if ((fd = ei_accept(&ec, listen, &conn)) == ERL_ERROR)
+        if ((fd = erl_accept(listen, &conn)) == ERL_ERROR)
                 erl_err_quit("Error on erl_accept");
 
         fprintf(stderr, "Connected to %s\n\r", conn.nodename);

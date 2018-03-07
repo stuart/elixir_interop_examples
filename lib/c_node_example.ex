@@ -26,7 +26,7 @@ defmodule CNodeExample do
   end
 
   def call_cnode(msg) do
-    send({:any, :cnode@cannelloni}, {:call, self(), msg})
+    send({:any, :c1@cannelloni}, {:call, self(), msg})
     receive do
       {:cnode, result} ->
         result
