@@ -1,3 +1,4 @@
+# A script to get various config flags
 defmodule ErlangConfig do
   def main(["root"]) do
     IO.puts root()
@@ -15,8 +16,18 @@ defmodule ErlangConfig do
     IO.puts "#{root}/erts-#{vsn}"
   end
 
-  def main(args) do
-    IO.puts "Unsupported arguments: #{args}"
+  def main(["help"]) do
+    IO.puts "Erlang Config\n"
+    IO.puts "This script returns paths for various erlang libraries."
+    IO.puts "Usage: elixir script/erlang_config.exs [ erts | ei | root | help]\n"
+    IO.puts "'root' : the root directory of the erlang install."
+    IO.puts "'ei' : the location of the Erlang Interface libraries."
+    IO.puts "'erts' : the location of the Erlang Runtime System libraries."
+    IO.puts "'help' : shows the help text you are looking at now."
+  end
+
+  def main(_args) do
+    IO.puts "Usage: elixir script/erlang_config.exs [ erts | ei | root | help]"
   end
 
   defp root do

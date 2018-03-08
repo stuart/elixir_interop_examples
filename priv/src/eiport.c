@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 
                 coeffs = malloc(sizeof(double) * len);
                 if(coeffs == NULL) {
-                        fprintf(stderr, "Could not allocate coefficients.");
+                        fprintf(stderr, "Out of memory.");
                         break;
                 }
 
