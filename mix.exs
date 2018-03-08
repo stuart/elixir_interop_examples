@@ -29,7 +29,7 @@ defmodule InteropExamples.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:binaries, path: "./priv", compile: "make all", clean: "make clean", app: false}
+      {:binaries, path: "./priv/src", compile: "make all", clean: "make clean", app: false}
     ]
   end
 end

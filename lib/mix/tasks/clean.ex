@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Priv.Clean do
 
   @shortdoc "Cleans the compiled C code in priv."
   def run(_args) do
-    File.cd("priv")
+    File.cd("priv/src")
     System.cmd("make", ["clean"])
   end
 end
