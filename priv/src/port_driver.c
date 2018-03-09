@@ -4,6 +4,8 @@
 #include "erl_driver.h"
 #include "erl_comm.h"
 
+char output_buff[1024];
+
 typedef struct {
         ErlDrvPort port;
 } example_data;
@@ -23,8 +25,12 @@ static void example_drv_stop(ErlDrvData handle)
 static void example_drv_output(ErlDrvData handle, char *buff,
                                ErlDrvSizeT bufflen)
 {
+        snprintf(output_buff, 7 + bufflen, "Hello %s", buff);
         example_data* d = (example_data*)handle;
-        driver_output(d->port, "hello world", 11);
+
+        // 6 + bufflen because we don't want a trailing 0 in
+        // an Elixir string.
+        driver_output(d->port, output_buff, 6 + bufflen);
 }
 
 ErlDrvEntry example_driver_entry = {

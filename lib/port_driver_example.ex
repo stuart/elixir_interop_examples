@@ -18,12 +18,12 @@ defmodule PortDriverExample do
 
 		#Example
 
-		iex> PortDriverExample.hello()
-		"hello world"
+		iex> PortDriverExample.hello("Bob")
+		"Hello Bob"
 
 	"""
-	def hello() do
-		send(__MODULE__,{:call, self()})
+	def hello(name) do
+		send(__MODULE__,{:call, self(), name})
 		receive do
 			{__MODULE__, result} -> result
 		end
@@ -33,14 +33,14 @@ defmodule PortDriverExample do
 	def init(shared_lib) do
 		:erlang.register(__MODULE__, self())
 		Process.flag(:trap_exit, true)
-		port = Port.open({:spawn, shared_lib}, [{:packet, 2}, :binary])
+		port = Port.open({:spawn_driver, shared_lib}, [{:packet, 2}, :binary])
 		loop(port)
 	end
 
 	def loop(port) do
 		receive do
-			{:call, caller} ->
-				Port.command(port, :erlang.term_to_binary(:hello))
+			{:call, caller, name} ->
+				Port.command(port, name)
 				receive do
 					{_port, {:data, data}} ->
 						send(caller, {__MODULE__, data})

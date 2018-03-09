@@ -31,9 +31,10 @@ defmodule AsyncPortDriverExample do
       {:error, :already_loaded} -> :ok
       msg -> exit({:error, :could_not_load_driver, msg})
     end
-    port = Port.open({:spawn, "pg_async"}, [:binary])
+    port = Port.open({:spawn_driver, "pg_async"}, [:binary])
     :erlang.port_control(port, @drv_connect, connection_string)
-    case return_port_data(port) do
+
+		case return_port_data(port) do
       :ok ->
         {:ok, port}
       error ->
