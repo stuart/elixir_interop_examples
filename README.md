@@ -19,8 +19,8 @@ To remove the C objects you can run `mix priv.clean`
 
 ## Running the tests
 
-* Start epmd: `epmd -daemon` (Without epmd running the C node will fail to start.)
 * Run the suite: `mix test`
+* If the C node tests fail weirdly check that epmd is running as a daemon. (It should be started by test helper.)
 
 You should see all green.
 
