@@ -1,4 +1,5 @@
 defmodule CNodeExample do
+
   @doc """
     Returns the square of the argument.
 
@@ -26,7 +27,10 @@ defmodule CNodeExample do
   end
 
   def call_cnode(msg) do
-    send({:any, :c1@cannelloni}, {:call, self(), msg})
+    {:ok, hostname} = :inet.gethostname
+    # HACK to make this work on Macs
+    hostname = :erlang.iolist_to_binary(hostname) |> String.downcase
+    send({:any, :"c1@#{hostname}"}, {:call, self(), msg})
     receive do
       {:cnode, result} ->
         result

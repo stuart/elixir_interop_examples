@@ -69,6 +69,7 @@ int run_cnode(int port){
                 erl_err_quit("Error on erl_publish.");
 
         printf("Accepting\n");
+
         if ((fd = erl_accept(listen, &conn)) == ERL_ERROR)
                 erl_err_quit("Error on erl_accept");
 
